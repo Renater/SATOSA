@@ -143,6 +143,16 @@ class SAMLBackend(BackendModule, SAMLBaseModule):
         # finally, initialize the client object
         self.sp = Saml2Client(sp_config)
 
+    def get_own_entity_id(self, context=None):
+        """
+        :type context: satosa.context.Context
+        :rtype: str | None
+
+        :param context: The current context
+        :return: the entity_id of the saml backend
+        """
+        return self.sp.config.entityid
+
     def get_idp_entity_id(self, context):
         """
         :type context: satosa.context.Context
@@ -224,7 +234,7 @@ class SAMLBackend(BackendModule, SAMLBaseModule):
             args["policy"] = disco_policy
 
         loc = self.sp.create_discovery_service_request(
-            disco_url, self.sp.config.entityid, **args
+            disco_url, self.get_own_entity_id(context), **args
         )
 
         msg = {
@@ -571,7 +581,7 @@ class SAMLBackend(BackendModule, SAMLBaseModule):
         :param context: The current context
         :return: response with metadata
         """
-        msg = "Sending metadata response for entityId = {}".format(self.sp.config.entityid)
+        msg = "Sending metadata response for entityId = {}".format(self.get_own_entity_id(context))
         logline = lu.LOG_FMT.format(id=lu.get_session_id(context.state), message=msg)
         logger.debug(logline)
 
@@ -612,8 +622,9 @@ class SAMLBackend(BackendModule, SAMLBaseModule):
                     ("^%s$" % parsed_endp.path[1:], self.disco_response))
 
         if self.expose_entityid_endpoint():
-            logger.debug("Exposing backend entity endpoint = {}".format(self.sp.config.entityid))
-            parsed_entity_id = urlparse(self.sp.config.entityid)
+            entity_id = self.get_own_entity_id()
+            logger.debug("Exposing backend entity endpoint = {}".format(entity_id))
+            parsed_entity_id = urlparse(entity_id)
             url_map.append(("^{0}".format(parsed_entity_id.path[1:]),
                             self._metadata_endpoint))
 
