@@ -151,7 +151,11 @@ class SAMLBackend(BackendModule, SAMLBaseModule):
         :param context: The current context
         :return: the entity_id of the saml backend
         """
-        return self.sp.config.entityid
+        logger.debug("Computing entity ID from context {}".format(context))
+        if context is None:
+            return self.sp.config.entityid
+        else:
+            return self.sp.config.entityid + context.get_decoration("requester")
 
     def get_idp_entity_id(self, context):
         """
