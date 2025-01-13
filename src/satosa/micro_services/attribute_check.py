@@ -41,7 +41,7 @@ class AttributeCheck(ResponseMicroService):
                 missing_attributes.append(self.internal_attributes["attributes"][attribute]["saml"])
 
         if missing_attributes:
-            parameters = []
+            parameters = [ "entityID={}".format(data.auth_info.issuer) ]
             for missing_attribute in missing_attributes:
                 parameters.append("attributes[]={}".format(", ".join(missing_attribute)))
 
